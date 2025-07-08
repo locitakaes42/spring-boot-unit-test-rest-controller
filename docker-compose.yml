@@ -10,7 +10,16 @@ services:
     privileged: true
     networks:
       - cicd-net
-  
+ 
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    container_name: cloudflared
+    command: tunnel --url http://jenkins:8080
+    networks:
+      - cicd-net
+    depends_on:
+      - jenkins
+ 
   sonarqube:
     image: sonarqube:community
     container_name: sonarqube
@@ -29,13 +38,28 @@ services:
       - sonarqube_extensions:/opt/sonarqube/extensions
     networks:
       - cicd-net
-  
+ 
+  db:
+    image: postgres:13
+    container_name: sonar-postgres
+    environment:
+      POSTGRES_USER: sonar
+      POSTGRES_PASSWORD: sonar
+      POSTGRES_DB: sonar
+    volumes:
+      - postgresql:/var/lib/postgresql
+      - postgresql_data:/var/lib/postgresql/data
+    networks:
+      - cicd-net
+ 
 volumes:
   jenkins_home:
   sonarqube_conf:
   sonarqube_data:
   sonarqube_logs:
   sonarqube_extensions:
+  postgresql:
+  postgresql_data:
  
 networks:
   cicd-net:
